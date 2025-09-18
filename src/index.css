@@ -2,41 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* ECFresh Design System - Ready-to-cook vegetables delivered to your home */
 
 @layer base {
   :root {
+    /* ECFresh Brand Colors */
+    --ec-green: 151 64% 32%;        /* #1f8a3d */
+    --ec-green-light: 151 50% 45%;  /* lighter green */
+    --ec-green-dark: 151 80% 25%;   /* darker green */
+    --ec-orange: 22 100% 55%;       /* #ff7a18 */
+    --ec-orange-light: 22 90% 65%;  /* lighter orange */
+    --ec-orange-dark: 22 100% 45%;  /* darker orange */
+    
+    /* Base colors */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 151 15% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 151 15% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 151 15% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Use brand green as primary */
+    --primary: 151 64% 32%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Subtle green secondary */
+    --secondary: 151 30% 95%;
+    --secondary-foreground: 151 64% 32%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 151 10% 96%;
+    --muted-foreground: 151 10% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Orange as accent */
+    --accent: 22 100% 55%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 151 15% 90%;
+    --input: 151 15% 90%;
+    --ring: 151 64% 32%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+    
+    /* ECFresh specific design tokens */
+    --ec-success: 151 64% 32%;
+    --ec-warning: 22 100% 55%;
+    --ec-shadow-green: 151 64% 32% / 0.1;
+    --ec-shadow-orange: 22 100% 55% / 0.1;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--ec-green)), hsl(var(--ec-green-light)));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--ec-orange)), hsl(var(--ec-orange-light)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--ec-green)), hsl(var(--ec-green-dark)));
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --sidebar-background: 0 0% 98%;
 
