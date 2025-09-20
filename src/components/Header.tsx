@@ -21,7 +21,6 @@ export const Header = () => {
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-4">
-              <span className="hidden md:block">📞 1800-123-FRESH (37374)</span>
               <span className="hidden md:block">🚚 Free delivery above ₹300</span>
             </div>
             <div className="flex items-center gap-2">
