@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Plus, Heart, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Product, ProductVariant } from "@/lib/types";
+import { Product, ProductVariant } from "@/lib/supabase-types";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "@/hooks/use-toast";
 
@@ -15,15 +15,14 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product, isWishlisted = false, onWishlistToggle }: ProductCardProps) => {
   const { addToCart } = useCart();
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(
-    product.variants.find(v => v.isDefault) || product.variants[0]
-  );
+  const defaultVariant = product.product_variants?.[0];
+  const [selectedVariant, setSelectedVariant] = useState<any>(defaultVariant);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (!selectedVariant.isInStock) {
+    if (!selectedVariant.stock || selectedVariant.stock <= 0) {
       toast({
         title: "Out of Stock",
         description: "This variant is currently out of stock",
@@ -45,12 +44,12 @@ export const ProductCard = ({ product, isWishlisted = false, onWishlistToggle }:
     onWishlistToggle?.(product.id);
   };
 
-  const discountPercent = selectedVariant.originalPrice 
-    ? Math.round(((selectedVariant.originalPrice - selectedVariant.price) / selectedVariant.originalPrice) * 100)
+  const discountPercent = selectedVariant.mrp 
+    ? Math.round(((selectedVariant.mrp - selectedVariant.price) / selectedVariant.mrp) * 100)
     : 0;
 
   return (
-    <Link to={`/product/${product.slug}`} className="group">
+    <Link to={`/product/${product.id}`} className="group">
       <div className="bg-card rounded-xl border border-border hover:border-ec-green/30 transition-all duration-300 hover:shadow-lg hover:shadow-ec-green/10 overflow-hidden">
         {/* Image Container */}
         <div className="relative aspect-square overflow-hidden bg-muted">
@@ -69,7 +68,7 @@ export const ProductCard = ({ product, isWishlisted = false, onWishlistToggle }:
           )}
           
           {/* Featured Badge */}
-          {product.isFeatured && (
+          {product.is_featured && (
             <Badge className="absolute top-3 right-3 bg-ec-green hover:bg-ec-green-dark">
               Featured
             </Badge>
@@ -79,7 +78,7 @@ export const ProductCard = ({ product, isWishlisted = false, onWishlistToggle }:
           <Button
             size="icon"
             variant="ghost"
-            className={`absolute top-3 right-3 ${product.isFeatured ? 'top-12' : ''} bg-background/80 hover:bg-background ${
+            className={`absolute top-3 right-3 ${product.is_featured ? 'top-12' : ''} bg-background/80 hover:bg-background ${
               isWishlisted ? 'text-red-500' : 'text-muted-foreground'
             }`}
             onClick={handleWishlistToggle}
@@ -96,7 +95,7 @@ export const ProductCard = ({ product, isWishlisted = false, onWishlistToggle }:
               {product.name}
             </h3>
             <p className="text-sm text-muted-foreground line-clamp-2">
-              {product.shortDescription}
+              {product.description}
             </p>
           </div>
 
@@ -105,13 +104,13 @@ export const ProductCard = ({ product, isWishlisted = false, onWishlistToggle }:
             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
             <span className="text-sm font-medium">{product.rating}</span>
             <span className="text-sm text-muted-foreground">
-              ({product.reviewCount})
+              ({product.reviews_count})
             </span>
           </div>
 
           {/* Variants */}
           <div className="flex gap-1">
-            {product.variants.map((variant) => (
+            {product.product_variants?.map((variant) => (
               <button
                 key={variant.id}
                 onClick={(e) => {
@@ -123,8 +122,8 @@ export const ProductCard = ({ product, isWishlisted = false, onWishlistToggle }:
                   selectedVariant.id === variant.id
                     ? "bg-ec-green text-primary-foreground border-ec-green"
                     : "bg-background border-border hover:border-ec-green/50"
-                } ${!variant.isInStock ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={!variant.isInStock}
+                } ${!(variant.stock > 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={!(variant.stock > 0)}
               >
                 {variant.weight}
               </button>
@@ -138,26 +137,21 @@ export const ProductCard = ({ product, isWishlisted = false, onWishlistToggle }:
                 <span className="text-lg font-bold text-ec-green">
                   ₹{selectedVariant.price}
                 </span>
-                {selectedVariant.originalPrice && selectedVariant.originalPrice > selectedVariant.price && (
+                {selectedVariant.mrp && selectedVariant.mrp > selectedVariant.price && (
                   <span className="text-sm text-muted-foreground line-through">
-                    ₹{selectedVariant.originalPrice}
+                    ₹{selectedVariant.mrp}
                   </span>
                 )}
               </div>
-              {product.preparationTime && (
-                <p className="text-xs text-muted-foreground">
-                  {product.preparationTime}
-                </p>
-              )}
             </div>
 
             <Button
               size="sm"
               onClick={handleAddToCart}
-              disabled={!selectedVariant.isInStock}
+              disabled={!(selectedVariant.stock > 0)}
               className="bg-ec-green hover:bg-ec-green-dark shadow-ec-green/20 hover:shadow-ec-green/30"
             >
-              {selectedVariant.isInStock ? (
+              {(selectedVariant.stock > 0) ? (
                 <>
                   <Plus className="w-4 h-4 mr-1" />
                   Add
@@ -168,20 +162,7 @@ export const ProductCard = ({ product, isWishlisted = false, onWishlistToggle }:
             </Button>
           </div>
 
-          {/* Tags */}
-          {product.tags.length > 0 && (
-            <div className="flex gap-1 flex-wrap">
-              {product.tags.slice(0, 3).map((tag) => (
-                <Badge 
-                  key={tag} 
-                  variant="secondary" 
-                  className="text-xs"
-                >
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          )}
+          {/* Remove tags since they're not in our DB structure */}
         </div>
       </div>
     </Link>

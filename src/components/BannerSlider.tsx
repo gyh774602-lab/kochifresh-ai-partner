@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BANNERS } from "@/lib/mock-data";
+import { useBanners } from "@/hooks/useSupabaseData";
 
 export const BannerSlider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const activeBanners = BANNERS.filter(banner => banner.isActive);
+  const { banners: activeBanners, loading } = useBanners();
 
   useEffect(() => {
     if (activeBanners.length <= 1) return;
@@ -24,6 +24,14 @@ export const BannerSlider = () => {
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + activeBanners.length) % activeBanners.length);
   };
+
+  if (loading) {
+    return (
+      <div className="w-full mx-2 md:mx-0 mb-4">
+        <div className="bg-muted animate-pulse rounded-lg aspect-[16/4]"></div>
+      </div>
+    );
+  }
 
   if (!activeBanners.length) return null;
 
@@ -55,14 +63,14 @@ export const BannerSlider = () => {
                         {banner.subtitle}
                       </p>
                     )}
-                    {banner.ctaText && (
+                    {banner.link && (
                       <Button 
                         size="lg"
                         className="bg-ec-orange hover:bg-ec-orange-dark text-white shadow-ec-orange"
                         asChild
                       >
-                        <a href={banner.ctaLink || "#"}>
-                          {banner.ctaText}
+                        <a href={banner.link}>
+                          Shop Now
                         </a>
                       </Button>
                     )}

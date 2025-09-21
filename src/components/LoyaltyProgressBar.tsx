@@ -1,13 +1,14 @@
 import { Wallet, Gift } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { MOCK_USER } from "@/lib/mock-data";
+import { useAuth } from "@/hooks/useAuth";
 
 export const LoyaltyProgressBar = () => {
-  const user = MOCK_USER;
+  const { profile } = useAuth();
+  const walletBalance = profile?.wallet_balance || 0;
   const walletThreshold = 300; // Can purchase at ₹300
-  const progress = Math.min((user.walletBalance / walletThreshold) * 100, 100);
-  const remainingAmount = Math.max(walletThreshold - user.walletBalance, 0);
-  const canUseWallet = user.walletBalance >= walletThreshold;
+  const progress = Math.min((walletBalance / walletThreshold) * 100, 100);
+  const remainingAmount = Math.max(walletThreshold - walletBalance, 0);
+  const canUseWallet = walletBalance >= walletThreshold;
 
   return (
     <div className="bg-gradient-to-r from-ec-green/10 to-ec-orange/10 rounded-xl p-3 md:p-4 border border-ec-green/20 mx-2 md:mx-0">
@@ -18,12 +19,12 @@ export const LoyaltyProgressBar = () => {
           </div>
           <div>
             <h3 className="font-semibold text-xs md:text-sm">Wallet Balance</h3>
-            <p className="text-xs text-muted-foreground">Amount earned: ₹{user.walletBalance}</p>
+            <p className="text-xs text-muted-foreground">Amount earned: ₹{walletBalance}</p>
           </div>
         </div>
         
         <div className="text-right">
-          <div className="text-sm md:text-lg font-bold text-ec-green">₹{user.walletBalance}</div>
+          <div className="text-sm md:text-lg font-bold text-ec-green">₹{walletBalance}</div>
           {canUseWallet ? (
             <div className="text-xs text-ec-green font-medium">Ready to use!</div>
           ) : (

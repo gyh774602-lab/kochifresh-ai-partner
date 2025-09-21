@@ -1,18 +1,36 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, MapPin, User, ShoppingCart, Menu, X } from "lucide-react";
+import { Search, MapPin, User, ShoppingCart, Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/hooks/useCart";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { cart } = useCart();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   
   const savedPincode = localStorage.getItem("ecfresh_pincode");
   const cartItemCount = cart.items.reduce((sum, item) => sum + (item.isSelected ? item.quantity : 0), 0);
+
+  const handleAuthAction = async () => {
+    if (user) {
+      const { error } = await signOut();
+      if (error) {
+        toast.error('Failed to sign out');
+      } else {
+        toast.success('Signed out successfully');
+      }
+    } else {
+      navigate('/auth');
+    }
+  };
 
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">
@@ -63,11 +81,9 @@ export const Header = () => {
           <div className="flex items-center gap-2">
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center gap-1">
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/account" className="flex items-center gap-2">
-                  <User className="w-4 h-4" />
-                  <span className="text-sm">Account</span>
-                </Link>
+              <Button variant="ghost" size="sm" onClick={handleAuthAction}>
+                {user ? <LogOut className="w-4 h-4 mr-2" /> : <User className="w-4 h-4 mr-2" />}
+                <span className="text-sm">{user ? 'Sign Out' : 'Sign In'}</span>
               </Button>
               
               <Button variant="ghost" size="sm" className="relative" asChild>
@@ -117,11 +133,9 @@ export const Header = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-background border-t border-border">
           <div className="container mx-auto px-4 py-4 space-y-2">
-            <Button variant="ghost" className="w-full justify-start" asChild>
-              <Link to="/account" onClick={() => setIsMenuOpen(false)}>
-                <User className="w-4 h-4 mr-3" />
-                My Account
-              </Link>
+            <Button variant="ghost" className="w-full justify-start" onClick={handleAuthAction}>
+              {user ? <LogOut className="w-4 h-4 mr-3" /> : <User className="w-4 h-4 mr-3" />}
+              {user ? 'Sign Out' : 'Sign In'}
             </Button>
             <Button variant="ghost" className="w-full justify-start" asChild>
               <Link to="/cart" onClick={() => setIsMenuOpen(false)}>

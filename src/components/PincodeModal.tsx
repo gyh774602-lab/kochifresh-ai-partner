@@ -3,7 +3,7 @@ import { MapPin, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { KOCHI_PINCODES } from "@/lib/types";
+import { usePincodes } from "@/hooks/useSupabaseData";
 import { toast } from "@/hooks/use-toast";
 
 interface PincodeModalProps {
@@ -14,6 +14,7 @@ interface PincodeModalProps {
 export const PincodeModal = ({ isOpen, onClose }: PincodeModalProps) => {
   const [inputPincode, setInputPincode] = useState("");
   const [selectedPincode, setSelectedPincode] = useState("");
+  const { pincodes, loading } = usePincodes();
 
   const handlePincodeSubmit = () => {
     const pincode = selectedPincode || inputPincode.trim();
@@ -28,7 +29,7 @@ export const PincodeModal = ({ isOpen, onClose }: PincodeModalProps) => {
     }
 
     // Check if pincode is in Kochi list
-    const validPincode = KOCHI_PINCODES.find(p => p.code === pincode && p.isActive);
+    const validPincode = pincodes.find(p => p.code === pincode && p.is_active);
     
     if (!validPincode) {
       toast({
@@ -51,7 +52,7 @@ export const PincodeModal = ({ isOpen, onClose }: PincodeModalProps) => {
     onClose();
   };
 
-  const popularAreas = KOCHI_PINCODES.slice(0, 8); // Show first 8 areas
+  const popularAreas = pincodes.slice(0, 8); // Show first 8 areas
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
@@ -108,24 +109,28 @@ export const PincodeModal = ({ isOpen, onClose }: PincodeModalProps) => {
           <div className="space-y-3">
             <label className="text-sm font-medium">Popular areas in Kochi</label>
             <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-              {popularAreas.map((pincode) => (
-                <Button
-                  key={pincode.id}
-                  variant={selectedPincode === pincode.code ? "default" : "outline"}
-                  size="sm"
-                  className={`justify-start text-left h-auto py-3 px-3 ${
-                    selectedPincode === pincode.code 
-                      ? "bg-ec-green hover:bg-ec-green-dark" 
-                      : "hover:bg-secondary"
-                  }`}
-                  onClick={() => setSelectedPincode(pincode.code)}
-                >
-                  <div className="text-xs">
-                    <div className="font-medium">{pincode.area}</div>
-                    <div className="text-muted-foreground">{pincode.code}</div>
-                  </div>
-                </Button>
-              ))}
+              {loading ? (
+                <div className="col-span-2 text-center py-4">Loading areas...</div>
+              ) : (
+                popularAreas.map((pincode) => (
+                  <Button
+                    key={pincode.id}
+                    variant={selectedPincode === pincode.code ? "default" : "outline"}
+                    size="sm"
+                    className={`justify-start text-left h-auto py-3 px-3 ${
+                      selectedPincode === pincode.code 
+                        ? "bg-ec-green hover:bg-ec-green-dark" 
+                        : "hover:bg-secondary"
+                    }`}
+                    onClick={() => setSelectedPincode(pincode.code)}
+                  >
+                    <div className="text-xs">
+                      <div className="font-medium">{pincode.area}</div>
+                      <div className="text-muted-foreground">{pincode.code}</div>
+                    </div>
+                  </Button>
+                ))
+              )}
             </div>
           </div>
 
