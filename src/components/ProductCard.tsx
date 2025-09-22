@@ -31,7 +31,30 @@ export const ProductCard = ({ product, isWishlisted = false, onWishlistToggle }:
       return;
     }
 
-    addToCart(product, selectedVariant, 1);
+    // Create a compatible product object for the cart
+    const cartProduct = {
+      id: product.id,
+      name: product.name,
+      description: product.description || '',
+      image: product.image,
+      slug: product.id,
+      shortDescription: product.description || '',
+      images: [product.image],
+      categoryId: product.category_id || '',
+      category: { id: '', name: '', slug: '', image: '', isActive: true },
+      variants: [],
+      tags: [],
+      nutritionInfo: undefined,
+      preparationTime: undefined,
+      isActive: product.is_active,
+      isFeatured: product.is_featured || false,
+      rating: product.rating || 0,
+      reviewCount: product.reviews_count || 0,
+      createdAt: product.created_at,
+      updatedAt: product.updated_at || product.created_at
+    };
+
+    addToCart(cartProduct, selectedVariant, 1);
     toast({
       title: "Added to Cart! 🛒",
       description: `${product.name} (${selectedVariant.weight}) added to your cart`,

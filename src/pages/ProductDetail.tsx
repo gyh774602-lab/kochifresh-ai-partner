@@ -4,26 +4,33 @@ import { Minus, Plus, Heart, Star, ArrowLeft, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/ProductCard";
-import { PRODUCTS } from "@/lib/mock-data";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
 import { toast } from "@/hooks/use-toast";
-import { Product, ProductVariant } from "@/lib/types";
+import { useProduct } from "@/hooks/useSupabaseData";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   
-  const product = PRODUCTS.find(p => p.slug === slug);
+  const { product, loading, error } = useProduct(slug || '');
   
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(
-    product?.variants.find(v => v.isDefault) || product?.variants[0] || {} as ProductVariant
+  const [selectedVariant, setSelectedVariant] = useState<any>(
+    product?.product_variants?.[0] || null
   );
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  
-  if (!product) {
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">Loading...</h1>
+      </div>
+    );
+  }
+
+  if (error || !product) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
@@ -34,16 +41,14 @@ const ProductDetail = () => {
     );
   }
 
-  const relatedProducts = PRODUCTS.filter(p => 
-    p.categoryId === product.categoryId && p.id !== product.id && p.isActive
-  ).slice(0, 4);
+  const relatedProducts: any[] = []; // Will implement related products later
 
-  const discountPercent = selectedVariant.originalPrice 
-    ? Math.round(((selectedVariant.originalPrice - selectedVariant.price) / selectedVariant.originalPrice) * 100)
+  const discountPercent = selectedVariant?.mrp 
+    ? Math.round(((selectedVariant.mrp - selectedVariant.price) / selectedVariant.mrp) * 100)
     : 0;
 
   const handleAddToCart = () => {
-    if (!selectedVariant.isInStock) {
+    if (!selectedVariant?.stock || selectedVariant.stock <= 0) {
       toast({
         title: "Out of Stock",
         description: "This variant is currently out of stock",
@@ -97,7 +102,7 @@ const ProductDetail = () => {
         {/* Product Image */}
         <div className="aspect-square bg-muted relative">
           <img
-            src={product.images[selectedImageIndex]}
+            src={product.image}
             alt={product.name}
             className="w-full h-full object-cover"
           />
@@ -112,7 +117,7 @@ const ProductDetail = () => {
         <div className="p-4 space-y-4">
           <div>
             <h1 className="text-2xl font-bold mb-2">{product.name}</h1>
-            <p className="text-muted-foreground">{product.shortDescription}</p>
+            <p className="text-muted-foreground">{product.description}</p>
           </div>
 
           {/* Rating */}
@@ -121,15 +126,15 @@ const ProductDetail = () => {
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
               <span className="font-medium">{product.rating}</span>
             </div>
-            <span className="text-muted-foreground">({product.reviewCount} reviews)</span>
+            <span className="text-muted-foreground">({product.reviews_count} reviews)</span>
           </div>
 
           {/* Price */}
           <div className="flex items-center gap-3">
             <span className="text-2xl font-bold text-ec-green">₹{selectedVariant.price}</span>
-            {selectedVariant.originalPrice && selectedVariant.originalPrice > selectedVariant.price && (
+            {selectedVariant?.mrp && selectedVariant.mrp > selectedVariant.price && (
               <span className="text-lg text-muted-foreground line-through">
-                ₹{selectedVariant.originalPrice}
+                ₹{selectedVariant.mrp}
               </span>
             )}
           </div>
@@ -138,7 +143,7 @@ const ProductDetail = () => {
           <div>
             <h3 className="font-semibold mb-2">Select Weight</h3>
             <div className="flex gap-2">
-              {product.variants.map((variant) => (
+              {product.product_variants?.map((variant) => (
                 <button
                   key={variant.id}
                   onClick={() => setSelectedVariant(variant)}
@@ -146,8 +151,8 @@ const ProductDetail = () => {
                     selectedVariant.id === variant.id
                       ? "bg-ec-green text-primary-foreground border-ec-green"
                       : "bg-background border-border hover:border-ec-green/50"
-                  } ${!variant.isInStock ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  disabled={!variant.isInStock}
+                  } ${!(variant.stock > 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={!(variant.stock > 0)}
                 >
                   {variant.weight}
                   <br />
@@ -195,7 +200,7 @@ const ProductDetail = () => {
             <div className="space-y-4">
               <div className="aspect-square bg-muted rounded-xl overflow-hidden relative">
                 <img
-                  src={product.images[selectedImageIndex]}
+                  src={product.image}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
@@ -205,22 +210,6 @@ const ProductDetail = () => {
                   </Badge>
                 )}
               </div>
-              
-              {product.images.length > 1 && (
-                <div className="flex gap-2">
-                  {product.images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImageIndex(index)}
-                      className={`aspect-square w-20 rounded-lg overflow-hidden border-2 transition-colors ${
-                        selectedImageIndex === index ? 'border-ec-green' : 'border-border'
-                      }`}
-                    >
-                      <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Product Info */}
@@ -235,14 +224,14 @@ const ProductDetail = () => {
                   <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   <span className="font-semibold">{product.rating}</span>
                 </div>
-                <span className="text-muted-foreground">({product.reviewCount} reviews)</span>
+                <span className="text-muted-foreground">({product.reviews_count} reviews)</span>
               </div>
 
               <div className="flex items-center gap-4">
                 <span className="text-3xl font-bold text-ec-green">₹{selectedVariant.price}</span>
-                {selectedVariant.originalPrice && selectedVariant.originalPrice > selectedVariant.price && (
+                {selectedVariant?.mrp && selectedVariant.mrp > selectedVariant.price && (
                   <span className="text-xl text-muted-foreground line-through">
-                    ₹{selectedVariant.originalPrice}
+                    ₹{selectedVariant.mrp}
                   </span>
                 )}
               </div>
@@ -251,7 +240,7 @@ const ProductDetail = () => {
               <div>
                 <h3 className="font-semibold mb-3">Select Weight</h3>
                 <div className="flex gap-3">
-                  {product.variants.map((variant) => (
+                  {product.product_variants?.map((variant) => (
                     <button
                       key={variant.id}
                       onClick={() => setSelectedVariant(variant)}
@@ -259,8 +248,8 @@ const ProductDetail = () => {
                         selectedVariant.id === variant.id
                           ? "bg-ec-green text-primary-foreground border-ec-green"
                           : "bg-background border-border hover:border-ec-green/50"
-                      } ${!variant.isInStock ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      disabled={!variant.isInStock}
+                      } ${!(variant.stock > 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={!(variant.stock > 0)}
                     >
                       <div className="text-center">
                         <div className="font-semibold">{variant.weight}</div>
@@ -299,7 +288,7 @@ const ProductDetail = () => {
                 <Button
                   size="lg"
                   onClick={handleAddToCart}
-                  disabled={!selectedVariant.isInStock}
+                  disabled={!(selectedVariant?.stock > 0)}
                   className="flex-1 bg-ec-green hover:bg-ec-green-dark"
                 >
                   <ShoppingCart className="w-5 h-5 mr-2" />
@@ -308,7 +297,7 @@ const ProductDetail = () => {
                 <Button
                   size="lg"
                   onClick={handleBuyNow}
-                  disabled={!selectedVariant.isInStock}
+                  disabled={!(selectedVariant?.stock > 0)}
                   className="flex-1 bg-ec-orange hover:bg-ec-orange-dark"
                 >
                   Buy Now
@@ -333,7 +322,7 @@ const ProductDetail = () => {
           <Button
             size="lg"
             onClick={handleAddToCart}
-            disabled={!selectedVariant.isInStock}
+            disabled={!(selectedVariant?.stock > 0)}
             className="flex-1 bg-ec-green hover:bg-ec-green-dark"
           >
             <ShoppingCart className="w-5 h-5 mr-2" />
@@ -342,7 +331,7 @@ const ProductDetail = () => {
           <Button
             size="lg"
             onClick={handleBuyNow}
-            disabled={!selectedVariant.isInStock}
+            disabled={!(selectedVariant?.stock > 0)}
             className="flex-1 bg-ec-orange hover:bg-ec-orange-dark"
           >
             Buy Now
