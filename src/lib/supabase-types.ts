@@ -17,6 +17,9 @@ export interface Product {
   reviews_count: number;
   is_featured?: boolean;
   is_active: boolean;
+  category_id?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Category {
