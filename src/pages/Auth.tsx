@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoles } from "@/hooks/useRoles";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,15 +11,20 @@ import { toast } from "sonner";
 
 const Auth = () => {
   const { user, signIn, signUp, loading } = useAuth();
+  const { isAdmin, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (user && !loading) {
-      navigate('/');
+    if (user && !loading && !rolesLoading) {
+      if (isAdmin) {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, rolesLoading, isAdmin, navigate]);
 
   const [signInData, setSignInData] = useState({
     email: '',
@@ -46,7 +52,7 @@ const Auth = () => {
       }
     } else {
       toast.success('Welcome back!');
-      navigate('/');
+      // Wait a moment for roles to be fetched, then redirect will happen via useEffect
     }
     
     setIsLoading(false);
@@ -70,13 +76,13 @@ const Auth = () => {
       }
     } else {
       toast.success('Account created successfully! Please check your email to verify your account.');
-      navigate('/');
+      // Wait a moment for roles to be fetched, then redirect will happen via useEffect
     }
     
     setIsLoading(false);
   };
 
-  if (loading) {
+  if (loading || rolesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">Loading...</div>
